@@ -51,7 +51,7 @@ def create_card(row, template_path, output_folder):
 def main():
     # Configuration
     excel_path = "Docs/socios.xlsx"  # Path to your Excel file
-    template_path = "SeasonTickets/baseCard.png"  # Path to your template image
+    template_path = "Templates/baseCard.png"  # Path to your template image
     output_folder = "SeasonTickets"  # Output folder for generated cards
     
     # Create output folder if it does not exist
