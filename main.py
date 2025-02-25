@@ -1,44 +1,11 @@
-import os
-import pickle
-import base64
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.application import MIMEApplication
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
 import pandas as pd
+import os
 from PIL import Image, ImageDraw, ImageFont
-
-# Gmail API Scopes
-SCOPES = ['https://www.googleapis.com/auth/gmail.send']
-
-def authenticate_gmail():
-    """
-    Authenticates the user and returns the Gmail API service.
-    """
-    creds = None
-    # Load credentials from file if they exist
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
-            creds = pickle.load(token)
-    
-    # If no valid credentials, prompt the user to log in
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
-        
-        # Save the credentials for future use
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
-    
-    # Build the Gmail API service
-    service = build('gmail', 'v1', credentials=creds)
-    return service
+# Import smtplib for the actual sending function
+import smtplib
+# Here are the email package modules we'll need
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
 
 def create_card(row, template_path, output_folder):
     """
@@ -86,54 +53,15 @@ def create_card(row, template_path, output_folder):
         print(f"Error creating card: {str(e)}")
         raise  # Re-raise the exception if needed
 
-def create_message(sender, to, subject, body, attachment_path=None):
-    """
-    Creates an email message with an optional attachment.
-    """
-    message = MIMEMultipart()
-    message['to'] = to
-    message['from'] = sender
-    message['subject'] = subject
-
-    # Add the body of the email
-    message.attach(MIMEText(body, 'plain'))
-
-    # Add an attachment if provided
-    if attachment_path:
-        with open(attachment_path, 'rb') as file:
-            part = MIMEApplication(file.read(), Name=os.path.basename(attachment_path))
-        part['Content-Disposition'] = f'attachment; filename="{os.path.basename(attachment_path)}"'
-        message.attach(part)
-
-    # Encode the message in base64
-    raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode('utf-8')
-    return {'raw': raw_message}
-
-def send_email(service, user_id, message):
-    """
-    Sends an email using the Gmail API.
-    """
-    try:
-        message = service.users().messages().send(userId=user_id, body=message).execute()
-        print(f"Email sent: {message['id']}")
-        return message
-    except Exception as e:
-        print(f"Error sending email: {str(e)}")
-        raise e
-
 def main():
     # Configuration
-    excel_path = "Docs/socios.xlsx"  # Path to your Excel file
-    template_path = "SeasonTickets/baseCard.png"  # Path to your template image
+    excel_path = "Docs/sociosExample.xlsx"  # Path to your Excel file
+    template_path = "Templates/baseCard.png"  # Path to your template image
     output_folder = "SeasonTickets"  # Output folder for generated cards
-    sender_email = "your-email@gmail.com"  # Replace with your Gmail address
-
-    # Authenticate Gmail API
-    service = authenticate_gmail()
-
+    
     # Create output folder if it does not exist
     os.makedirs(output_folder, exist_ok=True)
-
+    
     try:
         # Read data from Excel
         df = pd.read_excel(excel_path)
@@ -143,22 +71,48 @@ def main():
             try:
                 # Create the membership card
                 card_path = create_card(row, template_path, output_folder)
-                print(f"Successfully processed: {row['NOMBRE']} {row['APELLIDOS']} (Member No: {row['NUMERO_SOCIO']})")
-
-                # Send the card via email
-                to_email = row['CORREO']  # Ensure your Excel file has an 'email' column
-                subject = "Your Membership Card"
-                body = f"Dear {row['NOMBRE']} {row['APELLIDOS']},\n\nPlease find your membership card attached.\n\nBest regards,\nYour Organization"
-
-                # Create and send the email
-                message = create_message(sender_email, to_email, subject, body, card_path)
-                send_email(service, "me", message)
-
+                print(f"Successfully processed: {row['nombre']} {row['apellidos']} (Member No: {row['numero_socio']})")
+                sendEmail(row['correo'], card_path)
             except Exception as e:
-                print(f"Error processing {row['NOMBRE']} {row['APELLIDOS']} (Member No: {row['NUMERO_SOCIO']}): {str(e)}")
+                print(f"Error processing {row['nombre']} {row['apellidos']} (Member No: {row['numero_socio']}): {str(e)}")
                 
     except Exception as e:
         print(f"General error: {str(e)}")
 
+def sendEmail(email, card_path):
+    # Create the container (outer) email message.
+    msg = MIMEMultipart()
+    msg['Subject'] = 'Your Harborough Town Season Ticket'
+    msg['From'] = 'joeljuaristi90@gmail.com'
+    
+    # Check if email is a list or a single address
+    if isinstance(email, list):
+        msg['To'] = ', '.join(email)
+        recipients = email
+    else:
+        msg['To'] = email
+        recipients = [email]
+        
+    msg.preamble = 'Test email with attachment'
+
+    # Open the files in binary mode.
+    with open(card_path, 'rb') as fp:
+        img = MIMEImage(fp.read())
+    msg.attach(img)
+
+    # Get account password - read as text, not binary
+    with open('gmailPass.txt', 'r') as fp:
+        password = fp.read().strip()
+        print(f"Password: {password}")
+
+    # Send the email via our own SMTP server.
+    s = smtplib.SMTP('smtp.gmail.com', 587) 
+    s.starttls()
+    s.login(msg['From'], password)
+    s.sendmail(msg['From'], recipients, msg.as_string())
+    s.quit()
+
 if __name__ == "__main__":
     main()
+
+
