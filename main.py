@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import sys
 from PIL import Image, ImageDraw, ImageFont
 # Import smtplib for the actual sending function
 import smtplib
@@ -65,6 +66,8 @@ def main():
     try:
         # Read data from Excel
         df = pd.read_excel(excel_path)
+
+        sys.stdout = open('logs/last_run.txt', 'w')
         
         # Process each member
         for index, row in df.iterrows():
