@@ -72,9 +72,11 @@ def main():
                 # Create the membership card
                 card_path = create_card(row, template_path, output_folder)
                 print(f"Successfully processed: {row['nombre']} {row['apellidos']} (Member No: {row['numero_socio']})")
-                sendEmail(row['correo'], card_path)
+                # sendEmail(row['correo'], card_path)
+                df.at[index, 'card_path'] = card_path
             except Exception as e:
                 print(f"Error processing {row['nombre']} {row['apellidos']} (Member No: {row['numero_socio']}): {str(e)}")
+        df.to_excel(excel_path, index=False)
                 
     except Exception as e:
         print(f"General error: {str(e)}")
