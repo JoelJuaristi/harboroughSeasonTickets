@@ -21,9 +21,9 @@ def create_card(row, template_path, output_folder):
 
         # Define the text and font
         full_name = f"{row['nombre']} {row['apellidos']}"
-        member_number = f"{row['numero_socio']}"
+        member_number = f"{row['numero_socio']:04d}"  # Format the member number as a 6-digit number
         font_path = "arial.ttf"  # Replace with the path to your font file
-        font_size = 15
+        font_size = 28
         try:
             font = ImageFont.truetype(font_path, font_size)
         except IOError:
@@ -33,9 +33,9 @@ def create_card(row, template_path, output_folder):
         text_color = (255, 255, 255)  # White color
 
         # Draw the name on the image
-        draw.text((302.2903225806451, 956.4285714285714), full_name, font=font, fill=text_color)
+        draw.text((170, 427), full_name, font=font, fill=text_color)
         # Draw the member number on the image
-        draw.text((304.2903225806451, 983.4285714285714), member_number, font=font, fill=text_color)
+        draw.text((170, 467), member_number, font=font, fill=text_color)
 
         # Save the modified image
         output_path = os.path.join(output_folder, f"card_{row['numero_socio']}.png")
@@ -50,7 +50,7 @@ def create_card(row, template_path, output_folder):
 def main():
     # Configuration
     excel_path = "Docs/sociosExample.xlsx"  # Path to your Excel file
-    template_path = "Templates/winner.png"  # Path to your template image
+    template_path = "Templates/dorso.png"  # Path to your template image
     output_folder = "SeasonTickets"  # Output folder for generated cards
     
     # Create output folder if it does not exist
@@ -68,8 +68,8 @@ def main():
                 # Create the membership card
                 card_path = create_card(row, template_path, output_folder)
                 print(f"Successfully processed: {row['nombre']} {row['apellidos']} (Member No: {row['numero_socio']})")
-                # sendEmail(row['correo'], card_path)
-                df.at[index, 'card_path'] = card_path
+                sendEmail(row['correo'], card_path)
+                # df.at[index, 'card_path'] = card_path
             except Exception as e:
                 print(f"Error processing {row['nombre']} {row['apellidos']} (Member No: {row['numero_socio']}): {str(e)}")
         df.to_excel(excel_path, index=False)
@@ -93,10 +93,17 @@ def sendEmail(email, card_path):
         
     msg.preamble = 'Test email with attachment'
 
+
+    # Attach front of card
+    front_path = r'Templates\frente.png'
+    with open(front_path, 'rb') as fp:
+        img = MIMEImage(fp.read())
+    msg.attach(img)
     # Open the files in binary mode.
     with open(card_path, 'rb') as fp:
         img = MIMEImage(fp.read())
     msg.attach(img)
+
 
     # Get account password - read as text, not binary
     with open('gmailPass.txt', 'r') as fp:
