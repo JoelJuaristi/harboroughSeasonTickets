@@ -20,29 +20,21 @@ def create_card(row, template_path, output_folder):
         draw = ImageDraw.Draw(image)
 
         # Define the text and font
-        text = f"{row['nombre']} {row['apellidos']}\nMember number: {row['numero_socio']}"
+        full_name = f"{row['nombre']} {row['apellidos']}"
+        member_number = f"{row['numero_socio']}"
         font_path = "arial.ttf"  # Replace with the path to your font file
-        font_size = 20
+        font_size = 15
         try:
             font = ImageFont.truetype(font_path, font_size)
         except IOError:
             font = ImageFont.load_default()  # Fallback to default font
 
-        # Calculate the position to center the text
-        # Use textbbox to get the bounding box of the text
-        bbox = draw.textbbox((0, 0), text, font=font)
-        text_width = bbox[2] - bbox[0]  # Calculate text width
-        text_height = bbox[3] - bbox[1]  # Calculate text height
-
-        image_width, image_height = image.size
-        x = (image_width - text_width) / 2
-        y = (image_height - text_height) / 2
-
         # Define text color (RGB)
         text_color = (255, 255, 255)  # White color
 
         # Draw the text on the image
-        draw.text((x, y), text, font=font, fill=text_color)
+        draw.text((302.2903225806451, 956.4285714285714), full_name, font=font, fill=text_color)
+        draw.text((302.2903225806451, 982.4285714285714), member_number, font=font, fill=text_color)
 
         # Save the modified image
         output_path = os.path.join(output_folder, f"card_{row['numero_socio']}.png")
@@ -57,7 +49,7 @@ def create_card(row, template_path, output_folder):
 def main():
     # Configuration
     excel_path = "Docs/sociosExample.xlsx"  # Path to your Excel file
-    template_path = "Templates/baseCard.png"  # Path to your template image
+    template_path = "Templates/winner.png"  # Path to your template image
     output_folder = "SeasonTickets"  # Output folder for generated cards
     
     # Create output folder if it does not exist
