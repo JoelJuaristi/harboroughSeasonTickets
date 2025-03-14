@@ -32,9 +32,10 @@ def create_card(row, template_path, output_folder):
         # Define text color (RGB)
         text_color = (255, 255, 255)  # White color
 
-        # Draw the text on the image
+        # Draw the name on the image
         draw.text((302.2903225806451, 956.4285714285714), full_name, font=font, fill=text_color)
-        draw.text((302.2903225806451, 982.4285714285714), member_number, font=font, fill=text_color)
+        # Draw the member number on the image
+        draw.text((304.2903225806451, 983.4285714285714), member_number, font=font, fill=text_color)
 
         # Save the modified image
         output_path = os.path.join(output_folder, f"card_{row['numero_socio']}.png")
