@@ -47,10 +47,54 @@ def create_card(row, template_path, output_folder):
         print(f"Error creating card: {str(e)}")
         raise  # Re-raise the exception if needed
 
+def wellcome_card(row, template_path, output_folder):
+    try:
+        # Load the image
+        image = Image.open(template_path)
+
+        # Prepare to draw on the image
+        draw = ImageDraw.Draw(image)
+
+        # Define the text and font
+        text = f"{row['nombre']}"
+        font_path = "Templates/Helvetica-Bold.ttf"  # Replace with the path to your font file
+        font_size = 100
+        try:
+            font = ImageFont.truetype(font_path, font_size)
+        except IOError:
+            font = ImageFont.load_default()  # Fallback to default font
+
+        # Calculate the position to center the text
+        # Use textbbox to get the bounding box of the text
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = bbox[2] - bbox[0]  # Calculate text width
+        text_height = bbox[3] - bbox[1]  # Calculate text height
+
+        image_width, image_height = image.size
+        x = (image_width - text_width) / 1.1
+        y = (image_height - text_height) / 1.265
+
+        # Define text color (RGB)
+        text_color = (255, 255, 255)  # White color
+
+        # Draw the text on the image
+        draw.text((x, y), text, font=font, fill=text_color)
+
+        # Save the modified image
+        output_path = os.path.join(output_folder, f"wellcomecard_{row['numero_socio']}.png")
+        image.save(output_path)
+
+        return output_path
+    
+    except Exception as e:
+        print(f"Error creating card: {str(e)}")
+        raise  # Re-raise the exception if needed
+
 def main():
     # Configuration
     excel_path = "Docs/sociosExample.xlsx"  # Path to your Excel file
     template_path = "Templates/dorso.png"  # Path to your template image
+    wellcome_path = "Templates/wellcoming.png"  # Path to your template image
     output_folder = "SeasonTickets"  # Output folder for generated cards
     
     # Create output folder if it does not exist
@@ -67,6 +111,7 @@ def main():
             try:
                 # Create the membership card
                 card_path = create_card(row, template_path, output_folder)
+                wellcome_output_path = wellcome_card(row, wellcome_path, output_folder)
                 print(f"Successfully processed: {row['nombre']} {row['apellidos']} (Member No: {row['numero_socio']})")
                 df.at[index, 'card_path'] = card_path
                 # card_path = row['card_path']
