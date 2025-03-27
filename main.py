@@ -57,7 +57,7 @@ def wellcome_card(row, template_path, output_folder):
 
         # Define the text and font
         text = f"{row['nombre']}"
-        font_path = "Templates/Helvetica-Bold.ttf"  # Replace with the path to your font file
+        font_path = "impact.ttf"  # Replace with the path to your font file
         font_size = 100
         try:
             font = ImageFont.truetype(font_path, font_size)
@@ -115,7 +115,7 @@ def main():
                 print(f"Successfully processed: {row['nombre']} {row['apellidos']} (Member No: {row['numero_socio']})")
                 df.at[index, 'card_path'] = card_path
                 # card_path = row['card_path']
-                # sendEmail(row['correo'], card_path)
+                # sendEmail(row['correo'], card_path, wellcome_output_path)
             except Exception as e:
                 print(f"Error processing {row['nombre']} {row['apellidos']} (Member No: {row['numero_socio']}): {str(e)}")
         df.to_excel(excel_path, index=False)
@@ -123,7 +123,7 @@ def main():
     except Exception as e:
         print(f"General error: {str(e)}")
 
-def sendEmail(email, card_path):
+def sendEmail(email, card_path, wellcome_path):
     # Create the container (outer) email message.
     msg = MIMEMultipart()
     msg['Subject'] = 'Your Harborough Town Season Ticket'
@@ -147,6 +147,11 @@ def sendEmail(email, card_path):
     msg.attach(img)
     # Open the files in binary mode.
     with open(card_path, 'rb') as fp:
+        img = MIMEImage(fp.read())
+    msg.attach(img)
+
+    # Attach wellcome card
+    with open(wellcome_path, 'rb') as fp:
         img = MIMEImage(fp.read())
     msg.attach(img)
 
