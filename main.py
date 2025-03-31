@@ -72,7 +72,7 @@ def wellcome_card(row, template_path, output_folder):
 
         image_width, image_height = image.size
         x = (image_width - text_width) / 1.1
-        y = (image_height - text_height) / 1.265
+        y = (image_height - text_height) / 1.2
 
         # Define text color (RGB)
         text_color = (255, 255, 255)  # White color
