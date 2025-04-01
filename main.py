@@ -7,6 +7,7 @@ import smtplib
 # Here are the email package modules we'll need
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 def create_card(row, template_path, output_folder):
     """
@@ -19,8 +20,11 @@ def create_card(row, template_path, output_folder):
         # Prepare to draw on the image
         draw = ImageDraw.Draw(image)
 
-        # Define the text and font
-        full_name = f"{row['nombre']} {row['apellidos']}"
+        # Check if value is NaN (which is a float) using pandas.isna() or by converting to string if needed
+        nombre = str(row['nombre']).strip() if 'nombre' in row and pd.notna(row['nombre']) else ''
+        apellidos = str(row['apellidos']).strip() if 'apellidos' in row and pd.notna(row['apellidos']) else ''
+
+        full_name = f"{nombre} {apellidos}".strip()
         member_number = f"{row['numero_socio']:04d}"  # Format the member number as a 6-digit number
         font_path = "arial.ttf"  # Replace with the path to your font file
         font_size = 28
@@ -137,8 +141,8 @@ def sendEmail(email, card_path, wellcome_path):
         msg['To'] = email
         recipients = [email]
         
-    msg.preamble = 'Test email with attachment'
-
+    texto = MIMEText('¡Bienvenido a la colmena!\n\n¡Gracias por ser miembro LMI FC! Aquí tienes tu carnet de socio que te acredita para acceder a los partidos de local del Harborough Town, entre otras ventajas.\n\nAdjunto al mismo veréis una tarjeta personalizada con el nombre de cada uno que os animamos a compartir en redes como orgullosos socios ‘Bees’.\n\n¡Vamos a por el ascenso, abejorros!', 'plain', 'utf-8')
+    msg.attach(texto)
 
     # Attach front of card
     front_path = r'Templates\frente.png'
